@@ -1,0 +1,19 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata: 
+  name: express-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: express-app
+  template:
+    metadata:
+      labels:
+        app: express-app      
+    spec:
+      containers:
+        - name: express-app
+          image: 'evertonzauso777/expressapp:1.1'
+          ports:
+            - containerPort: 80
