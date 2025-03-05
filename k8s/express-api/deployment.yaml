@@ -16,4 +16,4 @@ spec:
         - name: express-app
           image: 'evertonzauso777/expressapp:1.1'
           ports:
-            - containerPort: 80
+            - containerPort: 3000

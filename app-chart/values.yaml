@@ -1,0 +1,20 @@
+replicaCount: 1
+
+image:
+  repository: evertonzauso777/expressapp
+  tag: "1.1"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: true
+  host: express-api.example.com
+  path: /
+  pathType: Prefix
+  serviceName: express-svc
+  servicePort: 3000
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /  
