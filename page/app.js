@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
+import './FileUploadForm.css';
 
 const FileUploadForm = () => {
-  // Estados para os campos do formulário
   const [formData, setFormData] = useState({
     token: '',
     client: '',
@@ -12,10 +12,11 @@ const FileUploadForm = () => {
   });
   
   const [preview, setPreview] = useState('');
+  const [fileName, setFileName] = useState('');
   const fileInputRef = useRef(null);
   const [submissionStatus, setSubmissionStatus] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Manipulador de mudança nos campos de texto
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -24,117 +25,121 @@ const FileUploadForm = () => {
     }));
   };
 
-  // Manipulador de seleção de arquivo
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Determina o tipo do arquivo
+    setFileName(file.name);
+    
     let fileType = 'document';
     if (file.type.startsWith('image/')) fileType = 'image';
     else if (file.type.startsWith('video/')) fileType = 'video';
 
-    // Atualiza o tipo no formulário
     setFormData(prev => ({
       ...prev,
       type: fileType
     }));
 
-    // Cria preview (para imagens/vídeos)
     if (fileType !== 'document') {
       setPreview(URL.createObjectURL(file));
     } else {
       setPreview('');
     }
 
-    // Converte para Base64
+    setIsLoading(true);
     const reader = new FileReader();
     reader.onload = (event) => {
       setFormData(prev => ({
         ...prev,
         base64: event.target.result
       }));
+      setIsLoading(false);
     };
+    reader.onloadend = () => setIsLoading(false);
     reader.readAsDataURL(file);
   };
 
-  // Manipulador de envio do formulário
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Validação básica
     if (!formData.base64 && !formData.URL) {
       alert('Por favor, envie um arquivo ou forneça uma URL');
       return;
     }
 
-    // Simulação de envio para API
-    console.log('Payload enviado:', formData);
-    setSubmissionStatus('success');
+    setIsLoading(true);
+    setSubmissionStatus('sending');
     
-    // Limpar o formulário após 3 segundos
+    // Simulação de envio para API
     setTimeout(() => {
-      setSubmissionStatus(null);
-      setFormData({
-        token: '',
-        client: '',
-        name: '',
-        type: 'image',
-        URL: '',
-        base64: ''
-      });
-      setPreview('');
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }, 3000);
+      console.log('Payload enviado:', formData);
+      setIsLoading(false);
+      setSubmissionStatus('success');
+      
+      setTimeout(() => {
+        setSubmissionStatus(null);
+        setFormData({
+          token: '',
+          client: '',
+          name: '',
+          type: 'image',
+          URL: '',
+          base64: ''
+        });
+        setPreview('');
+        setFileName('');
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }, 3000);
+    }, 1500);
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-      <h1>Upload de Arquivo</h1>
+    <div className="form-container">
+      <h1 className="form-title">Upload de Arquivo</h1>
       
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
-          <label>Token:</label>
+        <div className="form-group">
+          <label className="form-label">Token</label>
           <input
             type="text"
             name="token"
             value={formData.token}
             onChange={handleInputChange}
-            style={{ width: '100%', padding: '8px' }}
+            className="form-input"
           />
         </div>
         
-        <div style={{ marginBottom: '15px' }}>
-          <label>Client:</label>
+        <div className="form-group">
+          <label className="form-label">Client</label>
           <input
             type="text"
             name="client"
             value={formData.client}
             onChange={handleInputChange}
-            style={{ width: '100%', padding: '8px' }}
+            className="form-input"
           />
         </div>
         
-        <div style={{ marginBottom: '15px' }}>
-          <label>Name:</label>
+        <div className="form-group">
+          <label className="form-label">Name</label>
           <input
             type="text"
             name="name"
             value={formData.name}
             onChange={handleInputChange}
-            style={{ width: '100%', padding: '8px' }}
+            className="form-input"
           />
         </div>
         
-        <div style={{ marginBottom: '15px' }}>
-          <label>Tipo de Arquivo:</label>
+        <div className="form-group">
+          <label className="form-label">Tipo de Arquivo</label>
           <select
             name="type"
             value={formData.type}
             onChange={handleInputChange}
-            style={{ width: '100%', padding: '8px' }}
+            className="form-select"
           >
             <option value="image">Imagem</option>
             <option value="video">Vídeo</option>
@@ -142,71 +147,67 @@ const FileUploadForm = () => {
           </select>
         </div>
         
-        <div style={{ marginBottom: '15px' }}>
-          <label>URL (opcional):</label>
+        <div className="form-group">
+          <label className="form-label">URL (opcional)</label>
           <input
             type="text"
             name="URL"
             value={formData.URL}
             onChange={handleInputChange}
             placeholder="https://exemplo.com/arquivo.jpg"
-            style={{ width: '100%', padding: '8px' }}
+            className="form-input"
           />
         </div>
         
-        <div style={{ marginBottom: '15px' }}>
-          <label>Arquivo (será convertido para Base64):</label>
+        <div className="form-group">
+          <label className="form-label">Arquivo (será convertido para Base64)</label>
           <input
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}
             accept={`${formData.type}/*`}
-            style={{ width: '100%', padding: '8px' }}
+            className="form-file-input"
           />
+          {fileName && <div className="file-info">Arquivo selecionado: {fileName}</div>}
         </div>
         
         {preview && (
-          <div style={{ marginBottom: '15px' }}>
+          <div className="preview-container">
             <h3>Preview:</h3>
-            {formData.type === 'image' && (
-              <img src={preview} alt="Preview" style={{ maxWidth: '300px', maxHeight: '300px' }} />
-            )}
-            {formData.type === 'video' && (
-              <video src={preview} controls style={{ maxWidth: '300px', maxHeight: '300px' }} />
-            )}
+            <div className="media-preview">
+              {formData.type === 'image' && (
+                <img src={preview} alt="Preview" />
+              )}
+              {formData.type === 'video' && (
+                <video src={preview} controls />
+              )}
+            </div>
           </div>
         )}
         
         {formData.base64 && (
-          <div style={{ marginBottom: '15px' }}>
-            <h3>Base64 Gerado:</h3>
+          <div className="form-group">
+            <label className="form-label">Base64 Gerado</label>
             <textarea
-              value={formData.base64.substring(0, 100) + '...'} // Mostra apenas o início para não sobrecarregar a UI
+              value={formData.base64.substring(0, 100) + '...'}
               readOnly
-              rows={3}
-              style={{ width: '100%' }}
+              className="form-textarea"
             />
-            <p>Base64 truncado para visualização. O payload completo será enviado.</p>
+            <p className="base64-info">Base64 truncado para visualização. O payload completo será enviado.</p>
           </div>
         )}
         
         <button
           type="submit"
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#4CAF50',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
+          className={`submit-button ${isLoading ? 'loading' : ''}`}
+          disabled={isLoading}
         >
-          Enviar
+          {isLoading ? 'Enviando...' : 'Enviar'}
         </button>
       </form>
       
       {submissionStatus === 'success' && (
-        <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#dff0d8', color: '#3c763d' }}>
+        <div className="success-message">
           Formulário enviado com sucesso! Verifique o console para ver o payload.
         </div>
       )}
