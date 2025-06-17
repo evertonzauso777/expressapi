@@ -16,7 +16,9 @@ const FileUploadForm = () => {
   const fileInputRef = useRef(null);
   const [submissionStatus, setSubmissionStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-
+  const [useUrl, setUseUrl] = useState(false); // Novo estado para controlar a escolha
+  
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -57,6 +59,21 @@ const FileUploadForm = () => {
     };
     reader.onloadend = () => setIsLoading(false);
     reader.readAsDataURL(file);
+  };
+
+   const handleUrlToggle = (e) => {
+    setUseUrl(e.target.checked);
+    // Limpa os campos quando alternar
+    if (e.target.checked) {
+      setFormData(prev => ({ ...prev, base64: '' }));
+      setPreview('');
+      setFileName('');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } else {
+      setFormData(prev => ({ ...prev, URL: '' }));
+    }
   };
 
   const handleSubmit = (e) => {
@@ -147,29 +164,46 @@ const FileUploadForm = () => {
           </select>
         </div>
         
-        <div className="form-group">
-          <label className="form-label">URL (opcional)</label>
-          <input
-            type="text"
-            name="URL"
-            value={formData.URL}
-            onChange={handleInputChange}
-            placeholder="https://exemplo.com/arquivo.jpg"
-            className="form-input"
-          />
+              {/* Novo toggle para escolher entre URL e Arquivo */}
+        <div className="form-group toggle-group">
+          <label className="toggle-label">
+            <input
+              type="checkbox"
+              checked={useUrl}
+              onChange={handleUrlToggle}
+              className="toggle-input"
+            />
+            <span className="toggle-slider"></span>
+            <span className="toggle-text">{useUrl ? 'Usar URL' : 'Usar Arquivo'}</span>
+          </label>
         </div>
         
-        <div className="form-group">
-          <label className="form-label">Arquivo (será convertido para Base64)</label>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept={`${formData.type}/*`}
-            className="form-file-input"
-          />
-          {fileName && <div className="file-info">Arquivo selecionado: {fileName}</div>}
-        </div>
+        {/* Condicional para mostrar URL ou File Input */}
+        {useUrl ? (
+          <div className="form-group">
+            <label className="form-label">URL do Arquivo</label>
+            <input
+              type="url"
+              name="URL"
+              value={formData.URL}
+              onChange={handleInputChange}
+              placeholder="https://exemplo.com/arquivo.jpg"
+              className="form-input"
+            />
+          </div>
+        ) : (
+          <div className="form-group">
+            <label className="form-label">Arquivo (será convertido para Base64)</label>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept={`${formData.type}/*`}
+              className="form-file-input"
+            />
+            {fileName && <div className="file-info">Arquivo selecionado: {fileName}</div>}
+          </div>
+        )}
         
         {preview && (
           <div className="preview-container">
